@@ -45,10 +45,10 @@
                 <el-checkbox v-model="scope.row.multiple" label="multiple" />
               </template>
               <template v-if="scope.row.type == 'date'">
-                <el-radio-group v-model="scope.row.dataType">
+                <el-radio-group v-model="scope.row.dateType">
                   <el-radio
                     :label="item"
-                    v-for="item in ['date', 'daterange', 'datetime', 'datetimerange', 'year', 'month']"
+                    v-for="item in ['date', 'daterange', 'datetime', 'datetimerange', 'year', 'month', 'monthrange']"
                     :key="item"
                     >{{ item }}</el-radio
                   >
@@ -136,7 +136,14 @@
 <script setup>
 import { reactive, ref, computed, getCurrentInstance } from 'vue'
 const { appContext } = getCurrentInstance()
-
+let columnItem = {
+  title: '',
+  key: '',
+  width: 150,
+  ellipsis: true,
+  tooltip: true,
+  resizable: true,
+}
 const searchTableData = ref([
   {
     type: 'select',
@@ -150,7 +157,7 @@ const searchTableData = ref([
     dateType: 'date',
   },
 ])
-const columnTableData = ref([{ id: 1 }])
+const columnTableData = ref([])
 const isCheckBox = ref(false)
 const moreText = ref(' ')
 const moreSearchText = ref('')
@@ -192,6 +199,7 @@ const searchObj = computed(() => {
         formValidate[key] = []
       }
       conditionObj.op = 'eq'
+      obj = { ...obj, option: [] }
     } else if (type === 'date') {
       obj = { ...obj, dateType }
     }
@@ -220,36 +228,30 @@ const columnsObj = computed(() => {
 const delColumn = (index, row) => {
   columnTableData.value.splice(index, 1)
 }
+
 const addColumn = (index, row) => {
   if (!index) {
-    columnTableData.value.push({
-      title: '',
-      key: '',
-      width: 150,
-    })
+    columnTableData.value.push(columnItem)
   } else {
-    columnTableData.value.splice(index + 1, 0, {
-      title: '',
-      key: '',
-      width: 150,
-    })
+    columnTableData.value.splice(index + 1, 0, columnItem)
   }
 }
 const addColumnMore = () => {
+  debugger
   let str = moreText.value
     .split('\n')
     .filter((el) => el)
     .toString()
+    .split('\t')
+    .filter((el) => el)
+    .toString()
+
   const text = str.replaceAll('，', ',')
   moreText.value = text
   if (text) {
-    let arr = text.split(',')
+    let arr = text.split(',').filter((el) => el)
     arr = arr.map((el) => {
-      return {
-        title: el,
-        key: '',
-        width: 150,
-      }
+      return { ...columnItem, title: el.trim() }
     })
     columnTableData.value.push(...arr)
   }
@@ -260,15 +262,18 @@ const addSearchMore = () => {
     .split('\n')
     .filter((el) => el)
     .toString()
+    .split('\t')
+    .filter((el) => el)
+    .toString()
   const text = str.replaceAll('，', ',')
   moreSearchText.value = text
   if (text) {
-    let arr = text.split(',')
+    let arr = text.split(',').filter((el) => el)
     arr = arr.map((el) => {
       return {
         type: 'input',
         key: '',
-        label: el,
+        label: el.trim(),
         placeholder: '',
         label_hh: false,
         clearable: true,
